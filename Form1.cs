@@ -36,8 +36,9 @@ namespace GenerarQr
 
             SaveFileDialog Caja = new SaveFileDialog();
             Caja.AddExtension = true;
+            Caja.FileName = txtCodigo.Text + ".png";
             Caja.ShowDialog();
-            if(!string.IsNullOrEmpty(Caja.FileName))
+            if (!string.IsNullOrEmpty(Caja.FileName))
             {
                 imgFinal.Save(Caja.FileName, ImageFormat.Png);
             }
@@ -76,8 +77,6 @@ namespace GenerarQr
                         }
 
                         dataGridView1.Columns[0].HeaderText = "Equipo";
-                        dataGridView1.Columns[1].HeaderText = "Marca";
-                        dataGridView1.Columns[2].HeaderText = "Serie";
 
                         dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
                         dataGridView1.AutoResizeColumns();
@@ -97,40 +96,29 @@ namespace GenerarQr
         {
             foreach (DataGridViewRow fila in dataGridView1.Rows)
             {
-                string Codigo = fila.Cells[2].Value.ToString();
-
-                Zen.Barcode.Code128BarcodeDraw mGeneradorCB = Zen.Barcode.BarcodeDrawFactory.Code128WithChecksum;
-                pbCodigoBarras.Image = mGeneradorCB.Draw(Codigo, 60);
-
-                var codigoBarras = pbCodigoBarras.Image;
-                var imagenCompleta = new Bitmap(codigoBarras.Width, codigoBarras.Height + 20);
-                var x = imagenCompleta.Width / 2;
-                var y = imagenCompleta.Height;
-
-                using (var grafic = Graphics.FromImage(imagenCompleta))
-                using (var sFormat = new StringFormat()
+                try
                 {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Far,
-                })
-                {
-                    grafic.Clear(Color.Transparent);
-                    grafic.DrawImage(codigoBarras, 2, 2);
-                    grafic.DrawString(Codigo, new Font("Arial", 10),
-                        Brushes.Black, x, y, sFormat);
+                    string Code = fila.Cells[0].Value.ToString();
+
+                    BarcodeLib.Barcode Codigo = new BarcodeLib.Barcode();
+                    Codigo.IncludeLabel = true;
+                    pbCodigoBarras.Image = Codigo.Encode(BarcodeLib.TYPE.CODE128, Code, Color.Black, Color.White, 200, 100);
+
+                    Image imgFinal = (Image)pbCodigoBarras.Image.Clone();
+
+                    SaveFileDialog Caja = new SaveFileDialog();
+                    Caja.AddExtension = true;
+                    Caja.FileName = Code + ".png";
+                    Caja.ShowDialog();
+                    if (!string.IsNullOrEmpty(Caja.FileName))
+                    {
+                        imgFinal.Save(Caja.FileName, ImageFormat.Png);
+                    }
+                    imgFinal.Dispose();
                 }
-                pbCodigoBarras.Image = imagenCompleta;
-
-                SaveFileDialog saveFileDialog = new SaveFileDialog();
-                saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-
-                saveFileDialog.FileName = Codigo + ".png";
-
-                if (saveFileDialog.ShowDialog() != DialogResult.Cancel)
+                catch
                 {
-                    string codigo_barras = saveFileDialog.FileName;
-                    Bitmap bitmap = new Bitmap(pbCodigoBarras.Image);
-                    bitmap.Save(codigo_barras);
+
                 }
             }
         }
